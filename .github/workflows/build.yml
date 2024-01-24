@@ -21,9 +21,11 @@ jobs:
           echo "revision=${REVISION}" >> $GITHUB_OUTPUT
       - name: setup
         run: |
-          sudo apt install -y git zip tar xz-utils curl build-essential mingw-w64
+          sudo apt install -y git zip tar xz-utils curl build-essential
       - name: Build
         run: |
+          set -eu
+
           ZIG_URL="https://ziglang.org/builds/zig-linux-x86_64-0.12.0-dev.2285+b80cad248.tar.xz"
           ICONV_URL="https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.17.tar.gz"
           GETTEXT_URL="https://ftp.gnu.org/pub/gnu/gettext/gettext-0.22.4.tar.gz"
@@ -62,13 +64,12 @@ jobs:
           CC="zig cc -target x86_64-linux-musl" CFLAGS="-I$EXPORT_LINUX/include" CPPFLAGS="-I$EXPORT_LINUX/include" LDFLAGS="-L$EXPORT_LINUX/lib -static" ./configure --host=x86_64-linux-musl --prefix="$EXPORT_LINUX" && make clean && make && make install
           cd ..
 
-
           cd "$ICONV_DIRNAME"
-          CC=i686-w64-mingw32-gcc ./configure --host=i686-w64-mingw32 --prefix=$EXPORT_MINGW && make clean && make && make install
+          CC="zig cc -target x86-windows-gnu" LDFLAGS="-static" ./configure --host=i686-windows-gnu --prefix="$EXPORT_MINGW" --enable-shared && make clean && make && make install
           cd ..
 
           cd "$GETTEXT_DIRNAME"
-          CC=i686-w64-mingw32-gcc CXX=i686-w64-mingw32-g++ CFLAGS="-I$EXPORT_MINGW/include" CPPFLAGS="-I$EXPORT_MINGW/include" LDFLAGS="-L$EXPORT_MINGW/lib" ./configure --host=i686-w64-mingw32 --prefix="$EXPORT_MINGW" && sed -i "s/@GNULIB_CLOSE@/1/" */*/unistd.in.h && make clean && make && make install
+          CC="zig cc -target x86-windows-gnu" CFLAGS="-I$EXPORT_MINGW/include" CPPFLAGS="-I$EXPORT_MINGW/include" LDFLAGS="-L$EXPORT_MINGW/lib" ./configure --host=i686-w64-mingw32 --prefix="$EXPORT_MINGW" --disable-shared && make clean && make && make install
           cd ..
 
           cd $EXPORT_LINUX
