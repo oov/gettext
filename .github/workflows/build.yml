@@ -21,7 +21,7 @@ jobs:
           echo "revision=${REVISION}" >> $GITHUB_OUTPUT
       - name: setup
         run: |
-          sudo apt install -y git zip tar xz-utils curl build-essential
+          sudo apt install -y git zip tar xz-utils curl build-essential mingw-w64
       - name: Build
         run: |
           set -eu
@@ -69,7 +69,7 @@ jobs:
           cd ..
 
           cd "$GETTEXT_DIRNAME"
-          CC="zig cc -target x86-windows-gnu" CFLAGS="-I$EXPORT_MINGW/include" CPPFLAGS="-I$EXPORT_MINGW/include" LDFLAGS="-L$EXPORT_MINGW/lib" ./configure --host=i686-w64-mingw32 --prefix="$EXPORT_MINGW" --disable-shared && make clean && make && make install
+          CC="zig cc -target x86-windows-gnu" CFLAGS="-I$EXPORT_MINGW/include" CPPFLAGS="-I$EXPORT_MINGW/include" LDFLAGS="-L$EXPORT_MINGW/lib" ./configure --host=i686-w64-mingw32 --prefix="$EXPORT_MINGW" --disable-shared && sed -i "s/@GNULIB_CLOSE@/1/" */*/unistd.in.h && make clean && make && make install
           cd ..
 
           cd $EXPORT_LINUX
