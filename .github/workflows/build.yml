@@ -65,11 +65,11 @@ jobs:
           cd ..
 
           cd "$ICONV_DIRNAME"
-          CC="zig cc -target x86-windows-gnu" LDFLAGS="-static" ./configure --host=i686-windows-gnu --prefix="$EXPORT_MINGW" --enable-shared && make clean && make && make install
+          CC="i686-w64-mingw32-gcc -static-libgcc" LD="i686-w64-mingw32-ld" AR="i686-w64-mingw32-ar" LDFLAGS="-dynamic" ./configure --host=i686-w64-mingw32 --prefix="$EXPORT_MINGW" --enable-dynamic && make clean && make && make install
           cd ..
 
           cd "$GETTEXT_DIRNAME"
-          CC="zig cc -target x86-windows-gnu" CFLAGS="-I$EXPORT_MINGW/include" CPPFLAGS="-I$EXPORT_MINGW/include" LDFLAGS="-L$EXPORT_MINGW/lib" ./configure --host=i686-w64-mingw32 --prefix="$EXPORT_MINGW" --disable-shared && sed -i "s/@GNULIB_CLOSE@/1/" */*/unistd.in.h && make clean && make && make install
+          CC="i686-w64-mingw32-gcc -static-libgcc -static-libstdc++" CXX="i686-w64-mingw32-g++ -static-libgcc -static-libstdc++" LD="i686-w64-mingw32-ld" AR="i686-w64-mingw32-ar" CFLAGS="-I$EXPORT_MINGW/include" CPPFLAGS="-I$EXPORT_MINGW/include" LDFLAGS="-L$EXPORT_MINGW/lib -dynamic" ./configure --host=i686-w64-mingw32 --prefix="$EXPORT_MINGW" --enable-dynamic --disable-libasprintf --disable-openmp && sed -i "s/@GNULIB_CLOSE@/1/" */*/unistd.in.h && make clean && make && make install
           cd ..
 
           cd $EXPORT_LINUX
