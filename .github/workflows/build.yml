@@ -11,7 +11,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Get the revision
@@ -19,63 +19,12 @@ jobs:
         run: |
           REVISION=$(git rev-parse --short HEAD)
           echo "revision=${REVISION}" >> $GITHUB_OUTPUT
-      - name: setup
-        run: |
-          sudo apt install -y git zip tar xz-utils curl build-essential mingw-w64
       - name: Build
         run: |
-          set -eu
-
-          ZIG_URL="https://ziglang.org/builds/zig-linux-x86_64-0.12.0-dev.2285+b80cad248.tar.xz"
-          ICONV_URL="https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.17.tar.gz"
-          GETTEXT_URL="https://ftp.gnu.org/pub/gnu/gettext/gettext-0.22.4.tar.gz"
-
-          ZIG_FILENAME=$(basename "$ZIG_URL")
-          ICONV_FILENAME=$(basename "$ICONV_URL")
-          GETTEXT_FILENAME=$(basename "$GETTEXT_URL")
-
-          ZIG_DIRNAME=$(basename "$ZIG_FILENAME" .tar.xz)
-          ICONV_DIRNAME=$(basename "$ICONV_FILENAME" .tar.gz)
-          GETTEXT_DIRNAME=$(basename "$GETTEXT_FILENAME" .tar.gz)
-
-          curl -sOL "$ZIG_URL"
-          curl -sOL "$ICONV_URL"
-          curl -sOL "$GETTEXT_URL"
-
-          tar xf "$ZIG_FILENAME"
-          tar xf "$ICONV_FILENAME"
-          tar xf "$GETTEXT_FILENAME"
-
-          export PATH=$PWD/$ZIG_DIRNAME:$PATH
-
-          EXPORT_LINUX=$PWD/exports/linux
-          EXPORT_MINGW=$PWD/exports/mingw
-          DIST_DIR=$PWD/dist
-
-          mkdir -p "$EXPORT_LINUX"
-          mkdir -p "$EXPORT_MINGW"
-          mkdir "$DIST_DIR"
-
-          cd "$ICONV_DIRNAME"
-          CC="zig cc -target x86_64-linux-musl" LDFLAGS="-static" ./configure --host=x86_64-linux-musl --prefix="$EXPORT_LINUX" && make clean && make && make install
-          cd ..
-
-          cd "$GETTEXT_DIRNAME"
-          CC="zig cc -target x86_64-linux-musl" CFLAGS="-I$EXPORT_LINUX/include" CPPFLAGS="-I$EXPORT_LINUX/include" LDFLAGS="-L$EXPORT_LINUX/lib -static" ./configure --host=x86_64-linux-musl --prefix="$EXPORT_LINUX" && make clean && make && make install
-          cd ..
-
-          cd "$ICONV_DIRNAME"
-          CC="i686-w64-mingw32-gcc -static-libgcc" LD="i686-w64-mingw32-ld" AR="i686-w64-mingw32-ar" LDFLAGS="-dynamic" ./configure --host=i686-w64-mingw32 --prefix="$EXPORT_MINGW" --enable-dynamic && make clean && make && make install
-          cd ..
-
-          cd "$GETTEXT_DIRNAME"
-          CC="i686-w64-mingw32-gcc -static-libgcc -static-libstdc++" CXX="i686-w64-mingw32-g++ -static-libgcc -static-libstdc++" LD="i686-w64-mingw32-ld" AR="i686-w64-mingw32-ar" CFLAGS="-I$EXPORT_MINGW/include" CPPFLAGS="-I$EXPORT_MINGW/include" LDFLAGS="-L$EXPORT_MINGW/lib -dynamic" ./configure --host=i686-w64-mingw32 --prefix="$EXPORT_MINGW" --enable-dynamic --disable-libasprintf --disable-openmp && sed -i "s/@GNULIB_CLOSE@/1/" */*/unistd.in.h && make clean && make && make install
-          cd ..
-
-          cd $EXPORT_LINUX
-          tar -Jcvf "$DIST_DIR/gettext-linux-x86_64-${{ steps.get_revision.outputs.revision }}.tar.xz" ./
-          cd $EXPORT_MINGW
-          zip -r "$DIST_DIR/gettext-windows-i686-${{ steps.get_revision.outputs.revision }}.zip" ./
+          mkdir -p dist
+          docker run -i --rm -v $PWD:/root/scripts/ -v $PWD/dist/:/root/dist/ -w /root ubuntu:20.04 /bin/bash -x scripts/build.bash
+          mv dist/linux.tar.xz "dist/gettext-linux-x86_64-${{ steps.get_revision.outputs.revision }}.tar.xz"
+          mv dist/windows.zip "dist/gettext-windows-i686-${{ steps.get_revision.outputs.revision }}.zip"
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
