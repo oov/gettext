@@ -3,8 +3,8 @@ SCRIPT_DIR="$(dirname "${BASH_SOURCE:-$0}")"
 
 apt update && apt install -y git zip tar curl build-essential mingw-w64
 
-ICONV_URL="https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.17.tar.gz"
-GETTEXT_URL="https://ftp.gnu.org/pub/gnu/gettext/gettext-0.22.4.tar.gz"
+ICONV_URL="https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz"
+GETTEXT_URL="https://ftp.gnu.org/pub/gnu/gettext/gettext-0.24.tar.gz"
 
 ICONV_FILENAME=$(basename "$ICONV_URL")
 GETTEXT_FILENAME=$(basename "$GETTEXT_URL")
